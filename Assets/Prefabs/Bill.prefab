@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 3766926884121303918}
   - component: {fileID: 3788615182206615184}
   - component: {fileID: 7806987556116757278}
+  - component: {fileID: 7867081751449991678}
   m_Layer: 0
   m_Name: Bill
   m_TagString: Bill
@@ -123,8 +124,8 @@ CircleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
-  m_Radius: 0.185
+  m_Offset: {x: 0.026191235, y: 0}
+  m_Radius: 0.39453268
 --- !u!50 &7806987556116757278
 Rigidbody2D:
   serializedVersion: 5
@@ -152,3 +153,16 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!114 &7867081751449991678
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9063034039334402671}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69292396915c50b4c806fb3ec6c7f545, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  itemNum: 0
