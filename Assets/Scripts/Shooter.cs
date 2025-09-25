@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 public class Shooter : MonoBehaviour
 {
@@ -25,6 +25,8 @@ public class Shooter : MonoBehaviour
     public void Shoot()
     {
         if (inAttack || (GameManager.bill <= 0)) return;
+
+        SoundManager.instance.SEPlay(SEType.Shoot); //お札を投げる音
 
         GameManager.bill--; //お札の数を減らす
         inAttack = true; //攻撃中

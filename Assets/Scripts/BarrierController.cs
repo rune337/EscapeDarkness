@@ -2,11 +2,14 @@ using UnityEngine;
 
 public class BarrierController : MonoBehaviour
 {
-    public float deleteTime = 5.0f; //Á–Å‚·‚é‚Ü‚Å‚Ì‚ kƒ“
+    public float deleteTime = 5.0f; //æ¶ˆæ»…ã™ã‚‹ã¾ã§ã®æ™‚ã‚kãƒ³
 
     void Start()
     {
-        //deleteTime•bŒã‚ÉÁ–Å
+
+        SoundManager.instance.SEPlay(SEType.Barrier); //ãƒãƒªã‚¢ã‚’å‡ºã™éŸ³
+
+        //deleteTimeç§’å¾Œã«æ¶ˆæ»…
         Destroy(gameObject, deleteTime);
     }
 
