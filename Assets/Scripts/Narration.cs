@@ -36,11 +36,11 @@ public class Narration : MonoBehaviour
 
         if (isEnding)
         {
-            SceneManager.LoadScene("Main");
+            SceneManager.LoadScene("Title");
         }
         else
         {
-            SceneManager.LoadScene("Title");
+            SceneManager.LoadScene("Main");
         }
     }
 

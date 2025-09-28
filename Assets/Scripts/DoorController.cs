@@ -109,7 +109,7 @@ public class DoorController : MonoBehaviour
                 yield return null;
             }
 
-            roomData.openDoor = true; //親のスクリプトのドア開錠フラグをON
+            roomData.openedDoor = true; //親のスクリプトのドア開錠フラグをON
             roomData.DoorOpenCheck(); //開錠フラグに応じてドアの表示/非表示
 
         }

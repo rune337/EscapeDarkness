@@ -13,8 +13,6 @@ MonoBehaviour:
   m_Name: Talk01 1
   m_EditorClassIdentifier: 
   msgArray:
-  - name: a
-    message: a
   - name: "\u8AB0\u304B\u306E\u30E1\u30E2"
     message: "\u304A\u672D\u306F\u62FE\u3046\u3068\u30B9\u30DA\u30FC\u30B9\u30AD\u30FC\u3067\u6295\u3052\u308B\u3053\u3068\u304C\u3067\u304D\u308B"
   - name: "\u8AB0\u304B\u306E\u30E1\u30E2"

@@ -19,13 +19,17 @@ public class EnemyController : MonoBehaviour
 
 
     public bool onBarrier; //バリアにあたっているか
+    public bool onAttacker;
     GameObject player; //プレイヤー情報
+    bool inDamage; //ダメージ中かどうかのフラグ管理
+    public int enemyHP = 3;
 
     void Start()
     {
         rbody = GetComponent<Rigidbody2D>();    // Rigidbody2Dを得る
         animator = GetComponent<Animator>();    //Animatorを得る
         player = GameObject.FindGameObjectWithTag("Player"); //プレイヤー情報を得る
+
     }
 
     void Update()
@@ -34,7 +38,7 @@ public class EnemyController : MonoBehaviour
         if (GameManager.gameState != GameState.playing) return;
 
         //バリアに触れている時は何もしない
-        if (onBarrier) return;
+        if (onBarrier || onAttacker) return;
 
         //プレイヤーがいない時は何もしない
         if (player == null) return;
@@ -101,10 +105,10 @@ public class EnemyController : MonoBehaviour
         if (GameManager.gameState != GameState.playing) return;
 
         //バリアに触れている時は何もしない
-        if (onBarrier)
+        if (onBarrier || onAttacker)
         {
             rbody.linearVelocity = Vector2.zero;
-            Debug.Log("バリア");
+            Debug.Log("バリアまたは攻撃を受けている");
             return;
         }
 
@@ -128,7 +132,62 @@ public class EnemyController : MonoBehaviour
         {
             onBarrier = true;
         }
+        else if (collision.gameObject.CompareTag("Attack"))
+        {
+            onAttacker = true;
+            // 攻撃してきたオブジェクト(collision.gameObject)を引数に渡す
+            GetDamage(collision.gameObject);
+        }
     }
+
+    void GetDamage(GameObject attacker)
+    {
+        //ステータスがplayingでなければ何もせず終わり
+        if (GameManager.gameState != GameState.playing) return;
+
+        SoundManager.instance.SEPlay(SEType.Damage); //ダメージを受ける音
+
+        enemyHP--; //プレイヤーHPを1減らす
+
+        if (enemyHP > 0)
+        {
+            //そこまでの敵の動きをいったんストップ
+            rbody.linearVelocity = Vector2.zero; //new Vector2(0,0)
+            //攻撃者と敵との差を取得し、方向を決める
+            Vector3 v = (transform.position - player.transform.position).normalized;
+            //決まった方向に押される
+            rbody.AddForce(v * 4, ForceMode2D.Impulse);
+
+            //点滅するためのフラグ
+            inDamage = true;
+
+            //時間差で0.25秒後に点滅フラグ解除
+            Invoke("DamageEnd", 0.25f);
+        }
+        else
+        {
+            //残HPが残っていなければ消える処理
+            EnemyDie();
+        }
+    }
+
+    void DamageEnd()
+    {
+        inDamage = false; //点滅ダメージフラグを解除
+        gameObject.GetComponent<SpriteRenderer>().enabled = true; //プレイヤーを確実に表示
+    }
+
+    void EnemyDie()
+    {
+        Debug.Log("敵を倒した！");
+        GetComponent<CircleCollider2D>().enabled = false; //当たり判定の無効化
+        rbody.linearVelocity = Vector2.zero; //動きを止める
+        rbody.gravityScale = 1.0f; //重力の復活
+        rbody.AddForce(new Vector2(0, 5), ForceMode2D.Impulse); //上に跳ね上げる
+        Destroy(gameObject, 1.0f); //1秒後に存在を消去
+    }
+
+
 
     private void OnTriggerExit2D(Collider2D collision)
     {
@@ -136,10 +195,18 @@ public class EnemyController : MonoBehaviour
         {
             onBarrier = false;
         }
+        else if (collision.gameObject.CompareTag("Attack"))
+        {
+            onAttacker = false;
+        }
     }
+
 
     private void OnDrawGizmosSelected()
     {
         Gizmos.DrawWireSphere(transform.position, reactionDistance);
     }
+
+
+
 }

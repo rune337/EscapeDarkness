@@ -1,6 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
-using System.Threading;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -13,142 +11,165 @@ public class BossController : MonoBehaviour
     public float shootSpeed = 5.0f;     //弾の速度
 
     public bool onBarrier; //バリアにあたっているか
-    GameObject player; //プレイヤー情報
+    // public bool onAttacker; // onAttackerは不要なため削除
+    bool inDamage; // ★★★ ダメージ中の無敵状態を管理する専用フラグを追加
 
+    GameObject player; //プレイヤー情報
     public float speed = 0.5f; // スピード
-    float axisH;                //横軸値(-1.0 ~ 0.0 ~ 1.0)
-    float axisV;                //縦軸値(-1.0 ~ 0.0 ~ 1.0)
+    float axisH;                //横軸値
+    float axisV;                //縦軸値
 
     Rigidbody2D rbody;          //Rigidbody 2D
     Animator animator;          //Animator
 
-    // Use this for initialization
     void Start()
     {
-        rbody = GetComponent<Rigidbody2D>();    // Rigidbody2Dを得る
-        animator = GetComponent<Animator>();    //Animatorを得る
-        player = GameObject.FindGameObjectWithTag("Player"); //プレイヤー情報を得る
+        rbody = GetComponent<Rigidbody2D>();
+        animator = GetComponent<Animator>();
+        player = GameObject.FindGameObjectWithTag("Player");
 
         animator.SetBool("Active", true);
     }
 
-    // Update is called once per frame
     void Update()
     {
-        //playingモードでないと何もしない
         if (GameManager.gameState != GameState.playing) return;
 
-        //バリアに触れている時は何もしない
-        if (onBarrier) return;
+        // ★★★ 停止条件を inDamage と onBarrier に変更
+        if (inDamage || onBarrier) return;
 
-        //プレイヤーがいない時は何もしない
         if (player == null) return;
 
         float dx = player.transform.position.x - transform.position.x;
         float dy = player.transform.position.y - transform.position.y;
-
         float rad = Mathf.Atan2(dy, dx);
-        float angle = rad * Mathf.Rad2Deg;
 
         // 移動するベクトルを作る
-        axisH = Mathf.Cos(rad) * speed;
-        axisV = Mathf.Sin(rad) * speed;
+        axisH = Mathf.Cos(rad); // speedを掛けるのはFixedUpdateで行う
+        axisV = Mathf.Sin(rad);
     }
 
     void FixedUpdate()
     {
-        //playingモードでないと何もしない
         if (GameManager.gameState != GameState.playing) return;
-
-        //プレイヤーがいない時は何もしない
         if (player == null) return;
 
-        //バリアに触れている時は何もしない
-        if (onBarrier)
+        // ★★★ 停止条件を inDamage と onBarrier に変更
+        if (inDamage || onBarrier)
         {
             rbody.linearVelocity = Vector2.zero;
 
-            float val = Mathf.Sin(Time.time * 50);
-            if (val > 0)
+            // 点滅処理はダメージ中のみ行う
+            if (inDamage)
             {
-                //描画機能を有効
-                GetComponent<SpriteRenderer>().enabled = true;
+                float val = Mathf.Sin(Time.time * 50);
+                GetComponent<SpriteRenderer>().enabled = val > 0;
             }
-            else
-            {
-                //描画機能を無効
-                GetComponent<SpriteRenderer>().enabled = false;
-            }
-
             return;
         }
 
         // 移動
-        rbody.linearVelocity = new Vector2(axisH, axisV).normalized;
+        rbody.linearVelocity = new Vector2(axisH, axisV).normalized * speed;
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
+        // ★★★ ダメージ処理のロジックを全面的に修正 ★★★
+
+        // バリアに触れたときの処理
         if (collision.gameObject.CompareTag("Barrier"))
         {
-            if (onBarrier) return;
+            onBarrier = true;
+            // 必要であればバリア接触時のリアクションをここに書く
+        }
 
-            hp--;
-            if(hp > 0)
+        // 攻撃に触れたときの処理
+        if (collision.gameObject.CompareTag("Attack"))
+        {
+            // 既にダメージ中でなければ（無敵時間中でなければ）
+            if (!inDamage)
             {
-                onBarrier = true;
-                StartCoroutine(Damaged());
-            }
-            else
-            {
-                if(GameManager.gameState == GameState.playing) StartCoroutine(StartEnding());
+                TakeDamage(); // ダメージを受ける処理を呼び出す
             }
         }
     }
 
-    IEnumerator Damaged()
+    // ★★★ OnTriggerExit2Dを新設してバリアから離れたことを検知 ★★★
+    private void OnTriggerExit2D(Collider2D collision)
     {
-        yield return new WaitForSeconds(5);
-        onBarrier = false;
-        //描画機能を有効
-        GetComponent<SpriteRenderer>().enabled = true;
+        if (collision.gameObject.CompareTag("Barrier"))
+        {
+            onBarrier = false;
+        }
+    }
+
+    // ★★★ ダメージを受ける処理を独立したメソッドに分離 ★★★
+    void TakeDamage()
+    {
+        hp--;
+        Debug.Log("ボスがダメージを受けた！ 残りHP: " + hp);
+
+        if (hp > 0)
+        {
+            // ダメージリアクション（無敵時間の開始）
+            StartCoroutine(DamageRoutine());
+        }
+        else
+        {
+            // 死亡処理
+            if (GameManager.gameState == GameState.playing)
+            {
+                StartCoroutine(StartEnding());
+            }
+        }
+    }
+
+    // ★★★ Damagedコルーチンをダメージ専用に修正 ★★★
+    IEnumerator DamageRoutine()
+    {
+        inDamage = true; // 無敵開始
+        yield return new WaitForSeconds(1.0f); // 無敵時間（5秒は長すぎるので1秒に調整）
+        inDamage = false; // 無敵終了
+        GetComponent<SpriteRenderer>().enabled = true; // 必ず表示状態に戻す
     }
 
     IEnumerator StartEnding()
     {
-        //ゲームエンド
+        GameManager.gameState = GameState.ending;
         animator.SetTrigger("Dead");
         rbody.linearVelocity = Vector2.zero;
-        GameManager.gameState = GameState.ending;
+        GetComponent<Collider2D>().enabled = false; // 当たり判定を消す
         yield return new WaitForSeconds(10);
         SceneManager.LoadScene("Ending");
     }
 
-    //攻撃　Attackアニメーションにつく
     void Attack()
     {
-        //発射口オブジェクトを取得
-        Transform tr = transform.Find("gate");
-        GameObject gate = tr.gameObject;
-        //弾を発射するベクトルを作る
-        GameObject player = GameObject.FindGameObjectWithTag("Player");
-        if (player != null)
+        if (onBarrier || inDamage)
         {
-            float dx = player.transform.position.x - gate.transform.position.x;
-            float dy = player.transform.position.y - gate.transform.position.y;
-            //アークタンジェント２関数で角度（ラジアン）を求める
-            float rad = Mathf.Atan2(dy, dx);
-            //ラジアンを度に変換して返す
-            float angle = rad * Mathf.Rad2Deg;
-            //Prefabから弾のゲームオブジェクトを作る（進行方向に回転）
-            Quaternion r = Quaternion.Euler(0, 0, angle);
-            GameObject bullet = Instantiate(bulletPrefab, gate.transform.position, r);
-            float x = Mathf.Cos(rad);
-            float y = Mathf.Sin(rad);
-            Vector3 v = new Vector3(x, y) * shootSpeed;
-            //発射
-            Rigidbody2D rbody = bullet.GetComponent<Rigidbody2D>();
-            rbody.AddForce(v, ForceMode2D.Impulse);
+            return; // 弾を撃たずにメソッドを終了
+        }
+
+        // ... (攻撃処理は変更なし) ...
+        Transform tr = transform.Find("gate");
+        if (tr == null || player == null) return;
+
+        GameObject gate = tr.gameObject;
+        float dx = player.transform.position.x - gate.transform.position.x;
+        float dy = player.transform.position.y - gate.transform.position.y;
+        float rad = Mathf.Atan2(dy, dx);
+        float angle = rad * Mathf.Rad2Deg;
+        Quaternion r = Quaternion.Euler(0, 0, angle);
+        GameObject bullet = Instantiate(bulletPrefab, gate.transform.position, r);
+
+        float x = Mathf.Cos(rad);
+        float y = Mathf.Sin(rad);
+        Vector3 v = new Vector3(x, y) * shootSpeed;
+
+        Rigidbody2D bulletRbody = bullet.GetComponent<Rigidbody2D>();
+        if (bulletRbody != null)
+        {
+            bulletRbody.AddForce(v, ForceMode2D.Impulse);
         }
     }
 }

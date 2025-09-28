@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class BarrierController : MonoBehaviour
 {
-    public float deleteTime = 5.0f; //消滅するまでの時あkン
+    public float deleteTime = 5.0f; //消滅するまでの時間
 
     void Start()
     {

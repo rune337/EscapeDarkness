@@ -228,7 +228,7 @@ public class RoomManager : MonoBehaviour
         roomData.roomName = roomName;
         roomData.nextRoomName = nextRoomName;
         roomData.nextScene = sceneName;
-        roomData.openDoor = openedDoor;
+        roomData.openedDoor = openedDoor;
         roomData.direction = direction;
         roomData.message = message;
 
