@@ -147,7 +147,7 @@ public class EnemyController : MonoBehaviour
 
         SoundManager.instance.SEPlay(SEType.Damage); //ダメージを受ける音
 
-        enemyHP--; //プレイヤーHPを1減らす
+        enemyHP--; //敵HPを1減らす
 
         if (enemyHP > 0)
         {
@@ -157,6 +157,7 @@ public class EnemyController : MonoBehaviour
             Vector3 v = (transform.position - player.transform.position).normalized;
             //決まった方向に押される
             rbody.AddForce(v * 4, ForceMode2D.Impulse);
+            
 
             //点滅するためのフラグ
             inDamage = true;

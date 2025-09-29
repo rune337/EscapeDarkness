@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 public class BossController : MonoBehaviour
 {
     // ヒットポイント
-    public int hp = 5;
+    public int hp = 30;
 
     public GameObject bulletPrefab;     //弾
     public float shootSpeed = 5.0f;     //弾の速度

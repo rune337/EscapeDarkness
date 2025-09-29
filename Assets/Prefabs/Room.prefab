@@ -85,11 +85,11 @@ MonoBehaviour:
   roomName: fromRoom1
   nextRoomName: Room1
   nextScene: Main
-  openDoor: 0
+  openedDoor: 0
   direction: 1
   message: {fileID: 11400000, guid: fa45aea45b8d2a6438f60f26d8fb6a69, type: 2}
   door: {fileID: 9010675692725955985}
-  isSavePoint: 1
+  isSavePoint: 0
 --- !u!1 &9010675692725955985
 GameObject:
   m_ObjectHideFlags: 0
